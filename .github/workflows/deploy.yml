@@ -43,4 +43,4 @@ jobs:
           port: 22
           script: |
             cd ~/ctfg-toolpad &&
-            npm run start
+            pm2 restart toolpad
