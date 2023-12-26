@@ -38,7 +38,7 @@ jobs:
           key: ${{ secrets.DEPLOY_KEY }}
           port: 22
           source: "./" # Path to your built app
-          target: "/ctfg-toolpad"
+          target: "~/ctfg-toolpad"
 
       - name: SSH into DigitalOcean droplet
         uses: appleboy/ssh-action@master
@@ -48,5 +48,5 @@ jobs:
           key: ${{ secrets.DEPLOY_KEY }}
           port: 22
           script: |
-            cd /ctfg-toolpad &&
+            cd ~/ctfg-toolpad &&
             npm start
