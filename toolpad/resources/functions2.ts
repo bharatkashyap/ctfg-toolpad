@@ -106,7 +106,7 @@ const readSecretsFromFile = async (secretsFilePath, passphraseFilePath) => {
     }
 
     const secrets = Object.fromEntries(keyValuePairs);
-
+    console.log("Secrets read successfully:", secrets);
     return secrets;
   } catch (error) {
     console.error("Error reading secrets:", error);
