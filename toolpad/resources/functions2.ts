@@ -1,4 +1,5 @@
-import AWS from "aws-sdk";
+import { Upload } from "@aws-sdk/lib-storage";
+import { S3 } from "@aws-sdk/client-s3";
 import Airtable from "airtable";
 import { promises as fs } from "fs";
 import { promisify } from "util";
@@ -33,9 +34,12 @@ const uploadToS3 = async (
     } = await readSecretsFromFile(secretsFilePath, passphraseFilePath);
 
     // Configure AWS SDK with the acquired information
-    const s3 = new AWS.S3({
-      accessKeyId: AWS_ACCESS_KEY_ID,
-      secretAccessKey: AWS_SECRET_ACCESS_KEY,
+    const s3 = new S3({
+      credentials: {
+        accessKeyId: AWS_ACCESS_KEY_ID,
+        secretAccessKey: AWS_SECRET_ACCESS_KEY,
+      },
+
       region: AWS_REGION,
     });
 
@@ -52,7 +56,10 @@ const uploadToS3 = async (
         Body: fileContent,
       };
 
-      const response = await s3.upload(params).promise();
+      const response = await new Upload({
+        client: s3,
+        params,
+      }).done();
 
       console.info(
         "Image uploaded successfully:",
@@ -95,6 +102,9 @@ const readSecretsFromFile = async (secretsFilePath, passphraseFilePath) => {
       console.error(`Error reading secrets: ${stderr}`);
       return;
     }
+    if (stdout) {
+      console.info(`Secrets read successfully: ${stdout}`);
+    }
 
     // Split and convert to JSON
     let keyValuePairs: string[][] = [];
@@ -106,7 +116,6 @@ const readSecretsFromFile = async (secretsFilePath, passphraseFilePath) => {
     }
 
     const secrets = Object.fromEntries(keyValuePairs);
-    console.log("Secrets read successfully:", secrets);
     return secrets;
   } catch (error) {
     console.error("Error reading secrets:", error);
