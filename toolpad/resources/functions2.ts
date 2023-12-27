@@ -99,7 +99,6 @@ const readSecretsFromFile = async (secretsFilePath, passphraseFilePath) => {
 
     if (stderr) {
       console.error(`Error reading secrets: ${stderr}`);
-      return;
     }
 
     // Split and convert to JSON
@@ -112,7 +111,7 @@ const readSecretsFromFile = async (secretsFilePath, passphraseFilePath) => {
     }
 
     const secrets = Object.fromEntries(keyValuePairs);
-    console.log("Secrets", secrets, "secrets");
+
     return secrets;
   } catch (error) {
     console.error("Error reading secrets:", error);
