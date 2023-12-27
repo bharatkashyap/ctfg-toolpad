@@ -98,11 +98,11 @@ const readSecretsFromFile = async (secretsFilePath, passphraseFilePath) => {
     }
     const decryptCommand = `openssl enc -d -aes-256-cbc -in ${secretsFilePath} -pass file:${passphraseFilePath}`;
     const { stdout, stderr } = await execPromise(decryptCommand);
+    console.log("debugger", stdout, "debugger");
     if (stderr) {
       console.error(`Error reading secrets: ${stderr}`);
       return;
     }
-    console.log("Secrets", stdout);
 
     // Split and convert to JSON
     let keyValuePairs: string[][] = [];
@@ -162,4 +162,33 @@ export default async function handler(
     passphraseFilePath
   );
   await uploadToAirtable(airtableListingId, urls);
+}
+
+export async function getScreenshotUrl(websiteUrl: string) {
+  const crypto = require("crypto");
+  const { TECHULUS_API_KEY, TECHULUS_API_URL, TECHULUS_SECRET } =
+    await readSecretsFromFile(encryptedSecretsFilePath, passphraseFilePath);
+
+  let params = `url=${websiteUrl}&delay=5`;
+  let hash = crypto
+    .createHash("md5")
+    .update(TECHULUS_SECRET + params)
+    .digest("hex");
+  let result_img_url = `${TECHULUS_API_URL}${TECHULUS_API_KEY}/${hash}/image?${params}`;
+
+  return result_img_url;
+}
+
+export async function screenshotUploader(
+  airtableListingId: string,
+  imageUrl: string,
+  websiteUrl: string
+) {
+  const url = await uploadToS3(
+    airtableListingId,
+    [{ url: imageUrl, id: websiteUrl }],
+    encryptedSecretsFilePath,
+    passphraseFilePath
+  );
+  await uploadToAirtable(airtableListingId, url);
 }

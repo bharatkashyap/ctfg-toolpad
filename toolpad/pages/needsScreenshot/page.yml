@@ -1,0 +1,115 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/mui/mui-toolpad/v0.1.42/docs/schemas/v1/definitions.json#properties/Page
+
+apiVersion: v1
+kind: page
+spec:
+  alias:
+    - 1VpqniH
+  title: Default page
+  content:
+    - component: Text
+      name: text
+      props:
+        value: Records which need images
+        variant: h4
+    - component: DataGrid
+      name: dataGrid
+      props:
+        rows: null
+        columns:
+          - field: id
+            type: string
+            width: 185
+          - field: projectName
+            type: string
+            headerName: Project Name
+            width: 172
+          - field: websiteURL
+            type: link
+            width: 227
+            headerName: Website URL
+          - field: file
+            type: image
+            width: 266
+            headerName: File (from Images)
+        height: 374
+        rowsSource: dataProvider
+        dataProviderId: airtableNeedsImage.ts:default
+        rowIdField: id
+    - component: Text
+      name: text5
+      props:
+        variant: h4
+        value:
+          $$jsExpression: |
+            dataGrid.selection?.id ? `Listing ${dataGrid.selection.id}` : ""
+    - component: Container
+      name: container
+      children:
+        - component: Container
+          name: container1
+          props:
+            visible:
+              $$jsExpression: |
+                Boolean(dataGrid.selection?.id)
+          children:
+            - component: Text
+              name: text1
+              layout:
+                columnSize: 1
+              props:
+                value: Captured Screenshot
+                variant: h5
+            - component: Image
+              name: image
+              props:
+                src:
+                  $$jsExpression: |
+                    generateScreenshotUrl.data
+          layout:
+            columnSize: 1
+    - component: Button
+      name: button
+      props:
+        content: Upload to S3
+        disabled:
+          $$jsExpression: >
+            !dataGrid.selection?.id ||
+              Boolean(dataGrid?.selection?.["File (from Images)"]?.length > 0) ||
+              Boolean(!image.src)
+        onClick:
+          $$jsExpressionAction: screenshotUploader.call()
+        loading:
+          $$jsExpression: |
+            screenshotUploader.isLoading
+        size: medium
+  queries:
+    - name: generateScreenshotUrl
+      mode: query
+      query:
+        function: functions2.ts#getScreenshotUrl
+        kind: local
+      parameters:
+        - name: websiteUrl
+          value:
+            $$jsExpression: |
+              dataGrid.selection?.websiteURL
+    - name: screenshotUploader
+      mode: mutation
+      query:
+        function: functions2.ts#screenshotUploader
+        kind: local
+      parameters:
+        - name: airtableListingId
+          value:
+            $$jsExpression: |
+              dataGrid.selection?.id
+        - name: imageUrl
+          value:
+            $$jsExpression: |
+              image.src
+        - name: websiteUrl
+          value:
+            $$jsExpression: >
+              dataGrid.selection?.websiteURL?.replace(/[^a-zA-Z0-9 ]/g,
+              "")?.slice(0, 32)

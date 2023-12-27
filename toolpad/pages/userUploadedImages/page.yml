@@ -34,7 +34,7 @@ spec:
             headerName: File (from Images)
         height: 374
         rowsSource: dataProvider
-        dataProviderId: airtableListings.ts:default
+        dataProviderId: airtableUserUploaded.ts:default
         rowIdField: id
     - component: Text
       name: text5
