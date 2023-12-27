@@ -102,9 +102,7 @@ const readSecretsFromFile = async (secretsFilePath, passphraseFilePath) => {
       console.error(`Error reading secrets: ${stderr}`);
       return;
     }
-    if (stdout) {
-      console.info(`Secrets read successfully: ${stdout}`);
-    }
+    console.log("Secrets", stdout);
 
     // Split and convert to JSON
     let keyValuePairs: string[][] = [];
