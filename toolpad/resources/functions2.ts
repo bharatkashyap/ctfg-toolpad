@@ -46,7 +46,6 @@ const uploadToS3 = async (
       // Upload to S3
       const fileContent = await fs.readFile(image.id);
       const s3Key = `screenshots/${airtableListingId}/${image.id}`;
-      console.info("Read secrets", AWS_S3_BUCKET, AWS_REGION, AWS_S3_BUCKET);
       const params = {
         Bucket: AWS_S3_BUCKET,
         Key: s3Key,
