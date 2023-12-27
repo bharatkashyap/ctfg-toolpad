@@ -8,6 +8,7 @@ on:
 jobs:
   build-deploy:
     runs-on: ubuntu-latest
+    environment: bk-one
 
     steps:
       - name: Checkout code
@@ -23,6 +24,11 @@ jobs:
 
       - name: Build the app
         run: npm run build
+        env:
+          AWS_USERNAME: ${{ secrets.AWS_USERNAME }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
 
       - name: SCP to DigitalOcean droplet
         uses: appleboy/scp-action@master
