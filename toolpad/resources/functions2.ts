@@ -26,21 +26,19 @@ const uploadToS3 = async (
 ) => {
   try {
     // Read secrets from the encrypted file
-    const {
-      AWS_ACCESS_KEY_ID,
-      AWS_SECRET_ACCESS_KEY,
-      AWS_REGION,
-      AWS_S3_BUCKET,
-    } = await readSecretsFromFile(secretsFilePath, passphraseFilePath);
+    const secrets = await readSecretsFromFile(
+      secretsFilePath,
+      passphraseFilePath
+    );
 
     // Configure AWS SDK with the acquired information
     const s3 = new S3({
       credentials: {
-        accessKeyId: AWS_ACCESS_KEY_ID,
-        secretAccessKey: AWS_SECRET_ACCESS_KEY,
+        accessKeyId: secrets.AWS_ACCESS_KEY_ID,
+        secretAccessKey: secrets.AWS_SECRET_ACCESS_KEY,
       },
 
-      region: AWS_REGION,
+      region: secrets.AWS_REGION,
     });
 
     const uploadPromises = airtableUploadedImages.map(async (image) => {
@@ -51,7 +49,7 @@ const uploadToS3 = async (
       const fileContent = await fs.readFile(image.id);
       const s3Key = `screenshots/${airtableListingId}/${image.id}`;
       const params = {
-        Bucket: AWS_S3_BUCKET,
+        Bucket: secrets.AWS_S3_BUCKET,
         Key: s3Key,
         Body: fileContent,
       };
@@ -63,12 +61,12 @@ const uploadToS3 = async (
 
       console.info(
         "Image uploaded successfully:",
-        AWS_S3_BUCKET,
-        AWS_REGION,
+        secrets.AWS_S3_BUCKET,
+        secrets.AWS_REGION,
         response.Key
       );
 
-      return `https://s3.${AWS_REGION}.amazonaws.com/${AWS_S3_BUCKET}/${s3Key}`;
+      return `https://s3.${secrets.AWS_REGION}.amazonaws.com/${secrets.AWS_S3_BUCKET}/${s3Key}`;
     });
     const uploadedImageUrls = await Promise.all(uploadPromises);
     return uploadedImageUrls;
@@ -98,7 +96,7 @@ const readSecretsFromFile = async (secretsFilePath, passphraseFilePath) => {
     }
     const decryptCommand = `openssl enc -d -aes-256-cbc -in ${secretsFilePath} -pass file:${passphraseFilePath}`;
     const { stdout, stderr } = await execPromise(decryptCommand);
-    console.log("debugger", stdout, "debugger");
+
     if (stderr) {
       console.error(`Error reading secrets: ${stderr}`);
       return;
@@ -114,6 +112,7 @@ const readSecretsFromFile = async (secretsFilePath, passphraseFilePath) => {
     }
 
     const secrets = Object.fromEntries(keyValuePairs);
+    console.log("Secrets", secrets, "secrets");
     return secrets;
   } catch (error) {
     console.error("Error reading secrets:", error);
@@ -166,15 +165,17 @@ export default async function handler(
 
 export async function getScreenshotUrl(websiteUrl: string) {
   const crypto = require("crypto");
-  const { TECHULUS_API_KEY, TECHULUS_API_URL, TECHULUS_SECRET } =
-    await readSecretsFromFile(encryptedSecretsFilePath, passphraseFilePath);
+  const secrets = await readSecretsFromFile(
+    encryptedSecretsFilePath,
+    passphraseFilePath
+  );
 
   let params = `url=${websiteUrl}&delay=5`;
   let hash = crypto
     .createHash("md5")
-    .update(TECHULUS_SECRET + params)
+    .update(secrets.TECHULUS_SECRET + params)
     .digest("hex");
-  let result_img_url = `${TECHULUS_API_URL}${TECHULUS_API_KEY}/${hash}/image?${params}`;
+  let result_img_url = `${secrets.TECHULUS_API_URL}${secrets.TECHULUS_API_KEY}/${hash}/image?${params}`;
 
   return result_img_url;
 }
