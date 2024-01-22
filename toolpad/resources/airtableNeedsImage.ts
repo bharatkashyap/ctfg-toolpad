@@ -8,13 +8,19 @@ import { createDataProvider } from "@mui/toolpad/server";
 export default createDataProvider({
   paginationMode: "cursor",
   async getRecords({ paginationModel: { cursor, pageSize } }) {
-    let url = `https://api.airtable.com/v0/${process.env.AIRTABLE_BASE}/Listings?view=${process.env.AIRTABLE_VIEW_SCREENSHOT}`;
+    let url = new URL(
+      `https://api.airtable.com/v0/${process.env.AIRTABLE_BASE}/Listings`
+    );
+    let params = new URLSearchParams({
+      view: process.env.AIRTABLE_VIEW_SCREENSHOT || "Screenshot view",
+    });
     if (cursor) {
-      url = url + `?offset=${cursor}`;
+      params.append("offset", cursor);
     }
     if (pageSize) {
-      url = url + `&pageSize=${pageSize}`;
+      params.append("pageSize", pageSize.toString());
     }
+    url.search = params.toString();
     const response = await fetch(
       url,
 
@@ -34,6 +40,7 @@ export default createDataProvider({
         file: record.fields["File (from Images)"],
       })),
       cursor: response.offset ?? null,
+      totalCount: 100,
     };
   },
 });

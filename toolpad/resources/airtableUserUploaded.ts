@@ -8,22 +8,24 @@ import { createDataProvider } from "@mui/toolpad/server";
 export default createDataProvider({
   paginationMode: "cursor",
   async getRecords({ paginationModel: { cursor, pageSize } }) {
-    let url = `https://api.airtable.com/v0/${process.env.AIRTABLE_BASE}/Listings?view=${process.env.AIRTABLE_VIEW}`;
+    let url = new URL(
+      `https://api.airtable.com/v0/${process.env.AIRTABLE_BASE}/Listings`
+    );
+    let params = new URLSearchParams({
+      view: process.env.AIRTABLE_VIEW || "Grid view",
+    });
     if (cursor) {
-      url = url + `?offset=${cursor}`;
+      params.append("offset", cursor);
     }
     if (pageSize) {
-      url = url + `&pageSize=${pageSize}`;
+      params.append("pageSize", pageSize.toString());
     }
-    const response = await fetch(
-      url,
-
-      {
-        headers: {
-          Authorization: `Bearer ${process.env.AIRTABLE_TOKEN}`,
-        },
-      }
-    ).then((res) => res.json());
+    url.search = params.toString();
+    const response = await fetch(url, {
+      headers: {
+        Authorization: `Bearer ${process.env.AIRTABLE_TOKEN}`,
+      },
+    }).then((res) => res.json());
 
     return {
       records: response.records.map((record) => ({
@@ -34,6 +36,7 @@ export default createDataProvider({
         file: record.fields["File (from Images)"],
       })),
       cursor: response.offset ?? null,
+      totalCount: 100,
     };
   },
 });
