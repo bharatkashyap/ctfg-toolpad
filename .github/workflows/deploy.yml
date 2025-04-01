@@ -44,10 +44,25 @@ jobs:
           port: 22
           script: |
             cd ~/ctfg-toolpad
-            # Check if PM2 process exists
-            if pm2 describe toolpad > /dev/null; then
-              pm2 restart toolpad
-            else
-              # Start new PM2 process if it doesn't exist
-              pm2 start npm --name "toolpad" -- start
+            # Check if service file exists
+            if [ ! -f /etc/systemd/system/toolpad.service ]; then
+              # Create service file only if it doesn't exist
+              echo "[Unit]
+              Description=Toolpad Application
+              After=network.target
+
+              [Service]
+              User=${{ secrets.DROPLET_USERNAME }}
+              WorkingDirectory=~/ctfg-toolpad
+              ExecStart=$(which npm) start
+              Restart=always
+
+              [Install]
+              WantedBy=multi-user.target" | sudo tee /etc/systemd/system/toolpad.service
+
+              # Enable new service
+              sudo systemctl enable toolpad
             fi
+
+            # Restart service
+            sudo systemctl restart toolpad
