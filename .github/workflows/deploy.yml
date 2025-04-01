@@ -43,5 +43,11 @@ jobs:
           key: ${{ secrets.DEPLOY_KEY }}
           port: 22
           script: |
-            cd ~/ctfg-toolpad &&
-            pm2 restart toolpad
+            cd ~/ctfg-toolpad
+            # Check if PM2 process exists
+            if pm2 describe toolpad > /dev/null; then
+              pm2 restart toolpad
+            else
+              # Start new PM2 process if it doesn't exist
+              pm2 start npm --name "toolpad" -- start
+            fi
