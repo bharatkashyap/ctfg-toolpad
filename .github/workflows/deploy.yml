@@ -53,7 +53,7 @@ jobs:
 
               [Service]
               User=${{ secrets.DROPLET_USERNAME }}
-              WorkingDirectory=~/ctfg-toolpad
+              WorkingDirectory=/${{ secrets.DROPLET_USERNAME}}/ctfg-toolpad
               ExecStart=$(which npm) start
               Restart=always
 
